@@ -34,5 +34,4 @@ For more information on using the amazon-sqs-java-extended-client-lib, see our g
 * Give us feedback [here](https://github.com/awslabs/amazon-sqs-java-extended-client-lib/issues).
 * If you'd like to contribute a new feature or bug fix, we'd love to see Github pull requests from you.
 
-mockgen -destination=mocks/mock_s3_svcclnt.go -package=mocks github.com/threehook/aws-sqs-extended-client-go S3SvcClientI<br/>
 mockgen -destination=mocks/mock_sqs_svcclnt.go -package=mocks github.com/threehook/aws-sqs-extended-client-go SqsSvcClientI<br/>
