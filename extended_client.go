@@ -321,14 +321,14 @@ func (c *SqsExtendedClient) getMsgAttrSize(msgAttrs map[string]types.MessageAttr
 	totalMsgAttrSize := int32(0)
 
 	for key, attr := range msgAttrs {
-		totalMsgAttrSize += getStringSizeInBytes(key)
+		totalMsgAttrSize += util.GetStringSizeInBytes(key)
 		if attr.DataType != nil {
-			totalMsgAttrSize += getStringSizeInBytes(*attr.DataType)
+			totalMsgAttrSize += util.GetStringSizeInBytes(*attr.DataType)
 		}
 
 		stringVal := attr.StringValue
 		if stringVal != nil {
-			totalMsgAttrSize += getStringSizeInBytes(*stringVal)
+			totalMsgAttrSize += util.GetStringSizeInBytes(*stringVal)
 		}
 
 		binVal := attr.BinaryValue
@@ -351,14 +351,14 @@ func (c *SqsExtendedClient) getReservedAttrNameIfPresent(msgAttrs map[string]typ
 
 func (c *SqsExtendedClient) isLarge(input *sqs.SendMessageInput) bool {
 	msgAttrSize := c.getMsgAttrSize(input.MessageAttributes)
-	msgBodySize := getStringSizeInBytes(*input.MessageBody)
+	msgBodySize := util.GetStringSizeInBytes(*input.MessageBody)
 	totalMsgSize := msgAttrSize + msgBodySize
 	return totalMsgSize > c.SqsClientConfig.PayloadSizeThreshold
 }
 
 func (c *SqsExtendedClient) isLargeForBatchEntry(entry *types.SendMessageBatchRequestEntry) bool {
 	msgAttrSize := c.getMsgAttrSize(entry.MessageAttributes)
-	msgBodySize := getStringSizeInBytes(*entry.MessageBody)
+	msgBodySize := util.GetStringSizeInBytes(*entry.MessageBody)
 	totalMsgSize := msgAttrSize + msgBodySize
 	return totalMsgSize > c.SqsClientConfig.PayloadSizeThreshold
 }
@@ -366,7 +366,7 @@ func (c *SqsExtendedClient) isLargeForBatchEntry(entry *types.SendMessageBatchRe
 func (c *SqsExtendedClient) storeMessageBatchInS3(batchEntry *types.SendMessageBatchRequestEntry) (*types.SendMessageBatchRequestEntry, error) {
 	// Read the content of the message from message body
 	msgContentStr := batchEntry.MessageBody
-	msgContentSize := getStringSizeInBytes(*msgContentStr)
+	msgContentSize := util.GetStringSizeInBytes(*msgContentStr)
 
 	// Add a new message attribute as a flag
 	dataType := "Number"
@@ -396,7 +396,7 @@ func (c *SqsExtendedClient) storeMessageBatchInS3(batchEntry *types.SendMessageB
 func (c *SqsExtendedClient) storeMessageInS3(input *sqs.SendMessageInput) (*sqs.SendMessageInput, error) {
 	// Read the content of the message from message body
 	msgContentStr := input.MessageBody
-	msgContentSize := getStringSizeInBytes(*msgContentStr)
+	msgContentSize := util.GetStringSizeInBytes(*msgContentStr)
 
 	// Add a new message attribute as a flag
 	dataType := "Number"
