@@ -1,4 +1,4 @@
-package aws_sqs_extended_client_go
+package config
 
 import (
 	"errors"
@@ -19,21 +19,23 @@ type ExtendedClientConfig struct {
 	UseLegacyReservedAttributeName bool
 }
 
-//
-//func NewExtendedClientConfiguration() *ExtendedClientConfig {
-//	return &ExtendedClientConfig{
-//		CleanupS3Payload:               true,
-//		UseLegacyReservedAttributeName: true,
-//		PayloadStorageConfig: poconf.PayloadStorageConfig{PayloadSizeThreshold: appconst.DefaultMessageSizeThreshold},
-//	}
-//}
+func NewExtendedClientConfigurationfromOther(other ExtendedClientConfig) *ExtendedClientConfig {
+	otherPayloadStorageConfig := &poconf.PayloadStorageConfig{
+		S3Client:                     other.S3Client,
+		S3BucketName:                 other.S3BucketName,
+		PayloadSizeThreshold:         other.PayloadSizeThreshold,
+		AlwaysThroughS3:              other.AlwaysThroughS3,
+		PayloadSupport:               other.PayloadSupport,
+		ServerSideEncryptionStrategy: other.ServerSideEncryptionStrategy,
+		ObjectCannedACL:              other.ObjectCannedACL,
+	}
 
-//func NewExtendedClientConfigurationfromOther(other ExtendedClientConfig) *ExtendedClientConfig {
-//	return &ExtendedClientConfig{
-//		CleanupS3Payload:               other.CleanupS3Payload,
-//		UseLegacyReservedAttributeName: other.UseLegacyReservedAttributeName,
-//	}
-//}
+	return &ExtendedClientConfig{
+		PayloadStorageConfig:           *otherPayloadStorageConfig,
+		CleanupS3Payload:               other.CleanupS3Payload,
+		UseLegacyReservedAttributeName: other.UseLegacyReservedAttributeName,
+	}
+}
 
 type ExtendedClientConfigBuilder struct {
 	ExtendedClientConfig ExtendedClientConfig
@@ -87,7 +89,7 @@ func (b *ExtendedClientConfigBuilder) WithUseLegacyReservedAttributeName(legacy 
 	return b
 }
 
-func (b *ExtendedClientConfigBuilder) withCannedAccessControlList(ObjectCannedACL types.ObjectCannedACL) *ExtendedClientConfigBuilder {
+func (b *ExtendedClientConfigBuilder) WithCannedAccessControlList(ObjectCannedACL types.ObjectCannedACL) *ExtendedClientConfigBuilder {
 	b.ExtendedClientConfig.ObjectCannedACL = ObjectCannedACL
 	return b
 }

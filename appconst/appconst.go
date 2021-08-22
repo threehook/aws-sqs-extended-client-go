@@ -17,7 +17,7 @@ const (
 
 	// This constant is shared with SNSExtendedClient
 	// SNS team should be notified of any changes made to this
-	DefaultMessageSizeThreshold = 262144
+	DefaultMessageSizeThreshold = int32(262144)
 
 	S3BucketNameMarker = "-..s3BucketName..-"
 	S3KeyMarker        = "-..s3Key..-"

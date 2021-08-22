@@ -14,6 +14,7 @@ import (
 	"github.com/threehook/aws-payload-offloading-go/encryption"
 	"github.com/threehook/aws-payload-offloading-go/payload"
 	"github.com/threehook/aws-sqs-extended-client-go/appconst"
+	"github.com/threehook/aws-sqs-extended-client-go/config"
 	"github.com/threehook/aws-sqs-extended-client-go/mocks"
 	"io/ioutil"
 	"log"
@@ -62,7 +63,7 @@ func TestMain(m *testing.M) {
 
 func TestWhenSendLargeMessageThenPayloadIsStoredInS3(t *testing.T) {
 	beforeEach(t)
-	cfg, _ := NewExtendedClientConfigBuilder().WithPayloadSupportEnabled(m.mockS3Client, s3BucketName).Build()
+	cfg, _ := config.NewExtendedClientConfigBuilder().WithPayloadSupportEnabled(m.mockS3Client, s3BucketName).Build()
 	sqsExtClient := NewSqsExtendedClient(m.mockSqsExtClient, cfg)
 
 	ctx := context.Background()
@@ -96,7 +97,7 @@ func TestWhenSendLargeMessageThenPayloadIsStoredInS3(t *testing.T) {
 
 func TestWhenSendLargeMessage_WithoutKMS_ThenPayloadIsStoredInS3AndKMSKeyIdIsNotUsed(t *testing.T) {
 	beforeEach(t)
-	cfg, _ := NewExtendedClientConfigBuilder().WithPayloadSupportEnabled(m.mockS3Client, s3BucketName).Build()
+	cfg, _ := config.NewExtendedClientConfigBuilder().WithPayloadSupportEnabled(m.mockS3Client, s3BucketName).Build()
 	sqsExtClient := NewSqsExtendedClient(m.mockSqsExtClient, cfg)
 
 	ctx := context.Background()
@@ -113,13 +114,12 @@ func TestWhenSendLargeMessage_WithoutKMS_ThenPayloadIsStoredInS3AndKMSKeyIdIsNot
 	input := &sqs.SendMessageInput{QueueUrl: &sqsQueueUrl, MessageBody: &msgBody}
 	_, _ = sqsExtClient.SendMessage(ctx, input)
 
-	assert := assert.New(t)
-	assert.Nil(capturedArgsMap["kmsKeyId"])
+	assert.Nil(t, capturedArgsMap["kmsKeyId"])
 }
 
 func TestWhenSendLargeMessage_WithCustomKMS_ThenPayloadIsStoredInS3AndCorrectKMSKeyIdIsUsed(t *testing.T) {
 	beforeEach(t)
-	cfg, _ := NewExtendedClientConfigBuilder().WithPayloadSupportEnabled(m.mockS3Client, s3BucketName).WithServerSideEncryptionStrategy(&encryption.CustomerKey{AwsKmsKeyId: s3ServerSideEncryption_kms_keyId}).Build()
+	cfg, _ := config.NewExtendedClientConfigBuilder().WithPayloadSupportEnabled(m.mockS3Client, s3BucketName).WithServerSideEncryptionStrategy(&encryption.CustomerKey{AwsKmsKeyId: s3ServerSideEncryption_kms_keyId}).Build()
 	sqsExtClient := NewSqsExtendedClient(m.mockSqsExtClient, cfg)
 
 	ctx := context.Background()
@@ -143,13 +143,12 @@ func TestWhenSendLargeMessage_WithCustomKMS_ThenPayloadIsStoredInS3AndCorrectKMS
 	input := &sqs.SendMessageInput{QueueUrl: &sqsQueueUrl, MessageBody: &msgBody}
 	_, _ = sqsExtClient.SendMessage(ctx, input)
 
-	assert := assert.New(t)
-	assert.Equal(s3ServerSideEncryption_kms_keyId, capturedArgsMap["kmsKeyId"])
+	assert.Equal(t, s3ServerSideEncryption_kms_keyId, capturedArgsMap["kmsKeyId"])
 }
 
 func TestWhenSendLargeMessage_WithDefaultKMS_ThenPayloadIsStoredInS3AndCorrectKMSKeyIdIsNotUsed(t *testing.T) {
 	beforeEach(t)
-	cfg, _ := NewExtendedClientConfigBuilder().WithPayloadSupportEnabled(m.mockS3Client, s3BucketName).WithServerSideEncryptionStrategy(&encryption.AwsManagedCmk{}).Build()
+	cfg, _ := config.NewExtendedClientConfigBuilder().WithPayloadSupportEnabled(m.mockS3Client, s3BucketName).WithServerSideEncryptionStrategy(&encryption.AwsManagedCmk{}).Build()
 	sqsExtClient := NewSqsExtendedClient(m.mockSqsExtClient, cfg)
 
 	ctx := context.Background()
@@ -167,14 +166,13 @@ func TestWhenSendLargeMessage_WithDefaultKMS_ThenPayloadIsStoredInS3AndCorrectKM
 	input := &sqs.SendMessageInput{QueueUrl: &sqsQueueUrl, MessageBody: &msgBody}
 	_, _ = sqsExtClient.SendMessage(ctx, input)
 
-	assert := assert.New(t)
-	assert.Nil(capturedArgsMap["kmsKeyId"])
-	assert.Equal(s3BucketName, capturedArgsMap["bucket"])
+	assert.Nil(t, capturedArgsMap["kmsKeyId"])
+	assert.Equal(t, s3BucketName, capturedArgsMap["bucket"])
 }
 
 func TestSendLargeMessageWithDefaultConfigThenLegacyReservedAttributeNameIsUsed(t *testing.T) {
 	beforeEach(t)
-	cfg, _ := NewExtendedClientConfigBuilder().WithPayloadSupportEnabled(m.mockS3Client, s3BucketName).Build()
+	cfg, _ := config.NewExtendedClientConfigBuilder().WithPayloadSupportEnabled(m.mockS3Client, s3BucketName).Build()
 	sqsExtClient := NewSqsExtendedClient(m.mockSqsExtClient, cfg)
 
 	ctx := context.Background()
@@ -203,7 +201,7 @@ func TestSendLargeMessageWithDefaultConfigThenLegacyReservedAttributeNameIsUsed(
 
 func TestSendLargeMessageWithGenericReservedAttributeNameConfigThenGenericReservedAttributeNameIsUsed(t *testing.T) {
 	beforeEach(t)
-	cfg, _ := NewExtendedClientConfigBuilder().WithPayloadSupportEnabled(m.mockS3Client, s3BucketName).WithUseLegacyReservedAttributeName(false).Build()
+	cfg, _ := config.NewExtendedClientConfigBuilder().WithPayloadSupportEnabled(m.mockS3Client, s3BucketName).WithUseLegacyReservedAttributeName(false).Build()
 	sqsExtClient := NewSqsExtendedClient(m.mockSqsExtClient, cfg)
 
 	ctx := context.Background()
@@ -232,7 +230,7 @@ func TestSendLargeMessageWithGenericReservedAttributeNameConfigThenGenericReserv
 
 func TestWhenSendSmallMessageThenS3IsNotUsed(t *testing.T) {
 	beforeEach(t)
-	cfg, _ := NewExtendedClientConfigBuilder().WithPayloadSupportEnabled(m.mockS3Client, s3BucketName).Build()
+	cfg, _ := config.NewExtendedClientConfigBuilder().WithPayloadSupportEnabled(m.mockS3Client, s3BucketName).Build()
 	sqsExtClient := NewSqsExtendedClient(m.mockSqsExtClient, cfg)
 
 	ctx := context.Background()
@@ -246,7 +244,7 @@ func TestWhenSendSmallMessageThenS3IsNotUsed(t *testing.T) {
 
 func TestWhenSendMessageWithLargePayloadSupportDisabledThenS3IsNotUsedAndSqsBackendIsResponsibleToFailIt(t *testing.T) {
 	beforeEach(t)
-	cfg, _ := NewExtendedClientConfigBuilder().WithPayloadSupportDisabled().Build()
+	cfg, _ := config.NewExtendedClientConfigBuilder().WithPayloadSupportDisabled().Build()
 	sqsExtClient := NewSqsExtendedClient(m.mockSqsExtClient, cfg)
 
 	ctx := context.Background()
@@ -261,7 +259,7 @@ func TestWhenSendMessageWithLargePayloadSupportDisabledThenS3IsNotUsedAndSqsBack
 
 func TestWhenSendMessageWithAlwaysThroughS3AndMessageIsSmallThenItIsStillStoredInS3(t *testing.T) {
 	beforeEach(t)
-	cfg, _ := NewExtendedClientConfigBuilder().WithPayloadSupportEnabled(m.mockS3Client, s3BucketName).
+	cfg, _ := config.NewExtendedClientConfigBuilder().WithPayloadSupportEnabled(m.mockS3Client, s3BucketName).
 		WithAlwaysThroughS3(true).Build()
 	sqsExtClient := NewSqsExtendedClient(m.mockSqsExtClient, cfg)
 
@@ -277,7 +275,7 @@ func TestWhenSendMessageWithAlwaysThroughS3AndMessageIsSmallThenItIsStillStoredI
 
 func TestSendMessageWithSetMessageSizeThresholdThenThresholdIsHonored(t *testing.T) {
 	beforeEach(t)
-	cfg, _ := NewExtendedClientConfigBuilder().WithPayloadSupportEnabled(m.mockS3Client, s3BucketName).
+	cfg, _ := config.NewExtendedClientConfigBuilder().WithPayloadSupportEnabled(m.mockS3Client, s3BucketName).
 		WithPayloadSizeThreshold(arbitrarySmallerThreshold).Build()
 	sqsExtClient := NewSqsExtendedClient(m.mockSqsExtClient, cfg)
 
@@ -304,7 +302,7 @@ func TestSendMessageWithSetMessageSizeThresholdThenThresholdIsHonored(t *testing
 
 func TestReceiveMessageMultipleTimesDoesNotAdditionallyAlterReceiveMessageInput(t *testing.T) {
 	beforeEach(t)
-	cfg, _ := NewExtendedClientConfigBuilder().WithPayloadSupportEnabled(m.mockS3Client, s3BucketName).Build()
+	cfg, _ := config.NewExtendedClientConfigBuilder().WithPayloadSupportEnabled(m.mockS3Client, s3BucketName).Build()
 	sqsExtClient := NewSqsExtendedClient(m.mockSqsExtClient, cfg)
 
 	ctx := context.Background()
@@ -319,7 +317,6 @@ func TestReceiveMessageMultipleTimesDoesNotAdditionallyAlterReceiveMessageInput(
 	input := &sqs.ReceiveMessageInput{}
 	expectedInput := &sqs.ReceiveMessageInput{MessageAttributeNames: appconst.ReservedAttrNames}
 
-	assert.New(t)
 	_, _ = sqsExtClient.ReceiveMessage(ctx, input)
 	assert.Equal(t, expectedInput, capturedArgsMap["input"])
 	_, _ = sqsExtClient.ReceiveMessage(ctx, input)
@@ -337,7 +334,7 @@ func TestReceiveMessage_when_MessageIsLarge_ReservedAttributeUsed(t *testing.T) 
 }
 
 func testReceiveMessage_when_MessageIsLarge(t *testing.T, reservedAttributeName string) error {
-	cfg, _ := NewExtendedClientConfigBuilder().WithPayloadSupportEnabled(m.mockS3Client, s3BucketName).Build()
+	cfg, _ := config.NewExtendedClientConfigBuilder().WithPayloadSupportEnabled(m.mockS3Client, s3BucketName).Build()
 	sqsExtClient := NewSqsExtendedClient(m.mockSqsExtClient, cfg)
 
 	msgAttrValues := make(map[string]types.MessageAttributeValue)
@@ -372,7 +369,6 @@ func testReceiveMessage_when_MessageIsLarge(t *testing.T, reservedAttributeName 
 	o, err := sqsExtClient.ReceiveMessage(ctx, input)
 	actualMsg := o.Messages[0]
 
-	assert.New(t)
 	assert.Equal(t, *msg.Body, *actualMsg.Body)
 
 	msgAttrsContainsKey := false
@@ -393,7 +389,7 @@ func testReceiveMessage_when_MessageIsLarge(t *testing.T, reservedAttributeName 
 
 func TestReceiveMessage_when_MessageIsSmall(t *testing.T) {
 	beforeEach(t)
-	cfg, _ := NewExtendedClientConfigBuilder().WithPayloadSupportEnabled(m.mockS3Client, s3BucketName).Build()
+	cfg, _ := config.NewExtendedClientConfigBuilder().WithPayloadSupportEnabled(m.mockS3Client, s3BucketName).Build()
 	sqsExtClient := NewSqsExtendedClient(m.mockSqsExtClient, cfg)
 
 	ctx := context.Background()
@@ -415,7 +411,6 @@ func TestReceiveMessage_when_MessageIsSmall(t *testing.T) {
 	o, _ := sqsExtClient.ReceiveMessage(ctx, input)
 	actualMsg := o.Messages[0]
 
-	assert.New(t)
 	assert.Equal(t, expectedMsg, *actualMsg.Body)
 	_, expMsgAttrValue := actualMsg.MessageAttributes[expectedMsgAttrName]
 	assert.NotNil(t, expMsgAttrValue)
@@ -436,7 +431,7 @@ func TestReceiveMessage_when_MessageIsSmall(t *testing.T) {
 
 func TestWhenMessageBatchIsSentThenOnlyMessagesLargerThanThresholdAreStoredInS3(t *testing.T) {
 	beforeEach(t)
-	cfg, _ := NewExtendedClientConfigBuilder().WithPayloadSupportEnabled(m.mockS3Client, s3BucketName).Build()
+	cfg, _ := config.NewExtendedClientConfigBuilder().WithPayloadSupportEnabled(m.mockS3Client, s3BucketName).Build()
 	sqsExtClient := NewSqsExtendedClient(m.mockSqsExtClient, cfg)
 
 	// This creates 10 messages, out of which only two are below the threshold (100K and 200K),
@@ -481,7 +476,7 @@ func TestWhenMessageBatchIsSentThenOnlyMessagesLargerThanThresholdAreStoredInS3(
 
 func TestWhenSmallMessageIsSentThenNoAttributeIsAdded(t *testing.T) {
 	beforeEach(t)
-	cfg, _ := NewExtendedClientConfigBuilder().WithPayloadSupportEnabled(m.mockS3Client, s3BucketName).Build()
+	cfg, _ := config.NewExtendedClientConfigBuilder().WithPayloadSupportEnabled(m.mockS3Client, s3BucketName).Build()
 	sqsExtClient := NewSqsExtendedClient(m.mockSqsExtClient, cfg)
 
 	ctx := context.Background()
@@ -496,14 +491,13 @@ func TestWhenSmallMessageIsSentThenNoAttributeIsAdded(t *testing.T) {
 	params := &sqs.SendMessageInput{QueueUrl: &sqsQueueUrl, MessageBody: &msgBody}
 	_, _ = sqsExtClient.SendMessage(ctx, params)
 
-	assert.New(t)
 	msgAttrs := capturedArgsMap["msgAttrs"]
 	assert.Empty(t, msgAttrs)
 }
 
 func TestWhenLargeMessageIsSentThenAttributeWithPayloadSizeIsAdded(t *testing.T) {
 	beforeEach(t)
-	cfg, _ := NewExtendedClientConfigBuilder().WithPayloadSupportEnabled(m.mockS3Client, s3BucketName).Build()
+	cfg, _ := config.NewExtendedClientConfigBuilder().WithPayloadSupportEnabled(m.mockS3Client, s3BucketName).Build()
 	sqsExtClient := NewSqsExtendedClient(m.mockSqsExtClient, cfg)
 
 	ctx := context.Background()
@@ -520,7 +514,6 @@ func TestWhenLargeMessageIsSentThenAttributeWithPayloadSizeIsAdded(t *testing.T)
 	params := &sqs.SendMessageInput{QueueUrl: &sqsQueueUrl, MessageBody: &msgBody}
 	_, _ = sqsExtClient.SendMessage(ctx, params)
 
-	assert.New(t)
 	msgAttrs := capturedArgsMap["msgAttrs"].(map[string]types.MessageAttributeValue)
 	actualMsglength, _ := strconv.Atoi(*msgAttrs[appconst.LegacyReservedAttrName].StringValue)
 	assert.Equal(t, moreThanSqsSizelimit, actualMsglength)
@@ -528,7 +521,7 @@ func TestWhenLargeMessageIsSentThenAttributeWithPayloadSizeIsAdded(t *testing.T)
 
 func TestDefaultExtendedClientDeletesSmallMessage(t *testing.T) {
 	beforeEach(t)
-	cfg, _ := NewExtendedClientConfigBuilder().WithPayloadSupportEnabled(m.mockS3Client, s3BucketName).Build()
+	cfg, _ := config.NewExtendedClientConfigBuilder().WithPayloadSupportEnabled(m.mockS3Client, s3BucketName).Build()
 	sqsExtClient := NewSqsExtendedClient(m.mockSqsExtClient, cfg)
 
 	ctx := context.Background()
@@ -545,14 +538,13 @@ func TestDefaultExtendedClientDeletesSmallMessage(t *testing.T) {
 
 	_, _ = sqsExtClient.DeleteMessage(ctx, params)
 
-	assert.New(t)
 	actualReceiptHandle := capturedArgsMap["rcptHndl"].(*string)
 	assert.Equal(t, receiptHandle, *actualReceiptHandle)
 }
 
 func TestDefaultExtendedClientDeletesObjectS3UponMessageDelete(t *testing.T) {
 	beforeEach(t)
-	cfg, _ := NewExtendedClientConfigBuilder().WithPayloadSupportEnabled(m.mockS3Client, s3BucketName).Build()
+	cfg, _ := config.NewExtendedClientConfigBuilder().WithPayloadSupportEnabled(m.mockS3Client, s3BucketName).Build()
 	sqsExtClient := NewSqsExtendedClient(m.mockSqsExtClient, cfg)
 
 	ctx := context.Background()
@@ -575,7 +567,6 @@ func TestDefaultExtendedClientDeletesObjectS3UponMessageDelete(t *testing.T) {
 	params := &sqs.DeleteMessageInput{QueueUrl: &sqsQueueUrl, ReceiptHandle: &largeMsgReceiptHandle}
 	_, _ = sqsExtClient.DeleteMessage(ctx, params)
 
-	assert.New(t)
 	actualReceiptHandle := capturedArgsMap["rcptHndl"].(*string)
 	assert.Equal(t, originalReceiptHandle, *actualReceiptHandle)
 	s3Input := capturedArgsMap["input"].(*s3.DeleteObjectInput)
@@ -585,7 +576,7 @@ func TestDefaultExtendedClientDeletesObjectS3UponMessageDelete(t *testing.T) {
 
 func TestExtendedClientConfiguredDoesNotDeleteObjectFromS3UponDelete(t *testing.T) {
 	beforeEach(t)
-	cfg, _ := NewExtendedClientConfigBuilder().WithPayloadSupportEnabled(m.mockS3Client, s3BucketName).
+	cfg, _ := config.NewExtendedClientConfigBuilder().WithPayloadSupportEnabled(m.mockS3Client, s3BucketName).
 		WithCleanupS3Payload(false).Build()
 	sqsExtClient := NewSqsExtendedClient(m.mockSqsExtClient, cfg)
 
@@ -605,14 +596,13 @@ func TestExtendedClientConfiguredDoesNotDeleteObjectFromS3UponDelete(t *testing.
 	params := &sqs.DeleteMessageInput{QueueUrl: &sqsQueueUrl, ReceiptHandle: &largeMsgReceiptHandle}
 	_, _ = sqsExtClient.DeleteMessage(ctx, params)
 
-	assert.New(t)
 	actualReceiptHandle := capturedArgsMap["rcptHndl"].(*string)
 	assert.Equal(t, originalReceiptHandle, *actualReceiptHandle)
 }
 
 func TestDefaultExtendedClientDeletesObjectsFromS3UponDeleteBatch(t *testing.T) {
 	beforeEach(t)
-	cfg, _ := NewExtendedClientConfigBuilder().WithPayloadSupportEnabled(m.mockS3Client, s3BucketName).Build()
+	cfg, _ := config.NewExtendedClientConfigBuilder().WithPayloadSupportEnabled(m.mockS3Client, s3BucketName).Build()
 	sqsExtClient := NewSqsExtendedClient(m.mockSqsExtClient, cfg)
 
 	batchSize := 10
@@ -629,7 +619,6 @@ func TestDefaultExtendedClientDeletesObjectsFromS3UponDeleteBatch(t *testing.T) 
 
 	_, _ = sqsExtClient.DeleteMessageBatch(ctx, params)
 
-	assert.New(t)
 	bucket := capturedArgsMap["bucket"].(*string)
 	assert.Equal(t, s3BucketName, *bucket)
 }
@@ -637,8 +626,8 @@ func TestDefaultExtendedClientDeletesObjectsFromS3UponDeleteBatch(t *testing.T) 
 func TestWhenSendMessageWIthCannedAccessControlListDefined(t *testing.T) {
 	beforeEach(t)
 	expectedObjectCannedACL := s3Types.ObjectCannedACLBucketOwnerFullControl
-	cfg, _ := NewExtendedClientConfigBuilder().WithPayloadSupportEnabled(m.mockS3Client, s3BucketName).
-		withCannedAccessControlList(expectedObjectCannedACL).Build()
+	cfg, _ := config.NewExtendedClientConfigBuilder().WithPayloadSupportEnabled(m.mockS3Client, s3BucketName).
+		WithCannedAccessControlList(expectedObjectCannedACL).Build()
 
 	ctx := context.Background()
 	m.mockSqsExtClient.EXPECT().SendMessage(ctx, gomock.Any()).Times(1)
@@ -655,7 +644,6 @@ func TestWhenSendMessageWIthCannedAccessControlListDefined(t *testing.T) {
 	params := &sqs.SendMessageInput{QueueUrl: &sqsQueueUrl, MessageBody: &msgBody}
 	_, _ = sqsExtClient.SendMessage(ctx, params)
 
-	assert.New(t)
 	s3Input := capturedArgsMap["input"].(*s3.PutObjectInput)
 	assert.Equal(t, expectedObjectCannedACL, s3Input.ACL)
 }

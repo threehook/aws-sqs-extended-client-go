@@ -1,1 +1,0 @@
-package aws_sqs_extended_client_go

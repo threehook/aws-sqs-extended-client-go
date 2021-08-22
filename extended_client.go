@@ -10,6 +10,7 @@ import (
 	"github.com/threehook/aws-payload-offloading-go/payload"
 	"github.com/threehook/aws-payload-offloading-go/s3"
 	"github.com/threehook/aws-sqs-extended-client-go/appconst"
+	"github.com/threehook/aws-sqs-extended-client-go/config"
 	"github.com/threehook/aws-sqs-extended-client-go/util"
 	"log"
 	"strconv"
@@ -19,13 +20,13 @@ import (
 type SqsExtendedClient struct {
 	//private static final Log LOG = LogFactory.getLog(AmazonSQSExtendedClient.class);
 	SqsClient       SqsSvcClientI
-	SqsClientConfig *ExtendedClientConfig
+	SqsClientConfig *config.ExtendedClientConfig
 	PayloadStore    payload.PayloadStore
 }
 
 // Constructs a new Amazon SQS extended client to invoke service methods on Amazon SQS with extended functionality
 // using the specified Amazon SQS client object.
-func NewSqsExtendedClient(sqsClient SqsSvcClientI, config *ExtendedClientConfig) *SqsExtendedClient {
+func NewSqsExtendedClient(sqsClient SqsSvcClientI, config *config.ExtendedClientConfig) *SqsExtendedClient {
 	s3Dao := &s3.S3Dao{
 		S3Client:                     config.S3Client,
 		ServerSideEncryptionStrategy: config.ServerSideEncryptionStrategy,
