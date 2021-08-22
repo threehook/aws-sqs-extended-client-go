@@ -12,6 +12,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/threehook/aws-payload-offloading-go/encryption"
+	s3mocks "github.com/threehook/aws-payload-offloading-go/mocks"
 	"github.com/threehook/aws-payload-offloading-go/payload"
 	"github.com/threehook/aws-sqs-extended-client-go/appconst"
 	"github.com/threehook/aws-sqs-extended-client-go/config"
@@ -42,7 +43,7 @@ var (
 
 type mcks struct {
 	ctrl             *gomock.Controller
-	mockS3Client     *mocks.MockS3SvcClientI
+	mockS3Client     *s3mocks.MockS3SvcClientI
 	mockSqsExtClient *mocks.MockSqsSvcClientI
 }
 
@@ -50,7 +51,7 @@ func beforeEach(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	m = mcks{
 		ctrl:             ctrl,
-		mockS3Client:     mocks.NewMockS3SvcClientI(ctrl),
+		mockS3Client:     s3mocks.NewMockS3SvcClientI(ctrl),
 		mockSqsExtClient: mocks.NewMockSqsSvcClientI(ctrl),
 	}
 }

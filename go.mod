@@ -9,5 +9,5 @@ require (
 	github.com/golang/mock v1.6.0
 	github.com/google/uuid v1.3.0
 	github.com/stretchr/testify v1.7.0
-	github.com/threehook/aws-payload-offloading-go v0.0.0-20210819090639-f511105303d6
+	github.com/threehook/aws-payload-offloading-go v0.0.0-20210822160241-61bc7f62a9ee
 )
